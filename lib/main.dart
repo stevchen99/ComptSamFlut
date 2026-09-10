@@ -212,6 +212,23 @@ class _TicketListScreenState extends State<TicketListScreen> {
     );
   }
 
+  void _handleCheckout(List<Ticket> tickets) {
+    final activeTicket = tickets.isNotEmpty
+        ? tickets.firstWhere(
+            (ticket) => ticket.dateOutput == null && !ticket.lanaGarde,
+            orElse: () => tickets.first,
+          )
+        : null;
+
+    if (activeTicket != null) {
+      _markOutput(activeTicket);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aucun ticket disponible pour checkout')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -354,22 +371,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
               left: 0,
               bottom: 0,
               child: ElevatedButton(
-                onPressed: () {
-                  final activeTicket = tickets.isNotEmpty
-                      ? tickets.firstWhere(
-                          (ticket) => ticket.dateOutput == null && !ticket.lanaGarde,
-                          orElse: () => tickets.first,
-                        )
-                      : null;
-
-                  if (activeTicket != null) {
-                    _markOutput(activeTicket);
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Aucun ticket disponible pour checkout')),
-                    );
-                  }
-                },
+                onPressed: () => _handleCheckout(snapshot.data ?? <Ticket>[]),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
