@@ -154,6 +154,28 @@ class _TicketListScreenState extends State<TicketListScreen> {
   }
 
   void _deleteTicket(String id) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Supprimer le ticket ?'),
+          content: const Text('Voulez-vous vraiment supprimer ce ticket ?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Non'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Oui'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
     try {
       await ApiService.deleteTicket(id);
       _refreshTickets();
@@ -314,14 +336,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                           Text('Out: ${dateFormat.format(ticket.dateOutput!)}', style: const TextStyle(color: Colors.green))
                                         else
                                           const Text('Out: En cours...', style: TextStyle(color: Colors.grey)),
-                                        if (ticket.lanaGarde)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 6),
-                                            child: const Chip(
-                                              label: Text('Lana Garde', style: TextStyle(fontSize: 10)),
-                                              visualDensity: VisualDensity.compact,
-                                            ),
-                                          ),
                                       ],
                                     ),
                                   ),
