@@ -235,7 +235,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
           final tickets = snapshot.data ?? <Ticket>[];
 
-          final total = tickets.fold<int>(0, (sum, ticket) => sum + ticket.combien);
+          final blueCount = tickets.where((ticket) => ticket.dateOutput == null && !ticket.lanaGarde).length;
+          final orangeCount = tickets.where((ticket) => ticket.lanaGarde).length;
+          final redCount = tickets.where((ticket) => ticket.dateOutput != null).length;
 
           return RefreshIndicator(
             onRefresh: () async => _refreshTickets(),
@@ -243,7 +245,11 @@ class _TicketListScreenState extends State<TicketListScreen> {
               slivers: [
                 SliverPersistentHeader(
                   pinned: true,
-                  delegate: _GreyDashboardHeaderDelegate(total: total),
+                  delegate: _GreyDashboardHeaderDelegate(
+                    blueCount: blueCount,
+                    orangeCount: orangeCount,
+                    redCount: redCount,
+                  ),
                 ),
                 if (tickets.isEmpty)
                   const SliverFillRemaining(
@@ -339,80 +345,130 @@ class _TicketListScreenState extends State<TicketListScreen> {
           );
         },
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
+      floatingActionButton: SizedBox(
+        width: MediaQuery.of(context).size.width - 32,
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            FloatingActionButton.extended(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Checkout')),
+            Positioned(
+              left: 0,
+              bottom: 0,
+              child: FloatingActionButton.extended(
+                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Checkout')),
+                ),
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.shopping_bag_outlined),
+                label: const Text('Checkout'),
+                heroTag: 'checkout_fab',
               ),
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.shopping_bag_outlined),
-              label: const Text('Checkout'),
-              heroTag: 'checkout_fab',
             ),
-            const SizedBox(height: 12),
-            FloatingActionButton(
-              onPressed: () => _showTicketDialog(),
-              tooltip: 'Nouveau ticket',
-              heroTag: 'add_ticket_fab',
-              child: const Icon(Icons.add),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: FloatingActionButton(
+                onPressed: () => _showTicketDialog(),
+                tooltip: 'Nouveau ticket',
+                heroTag: 'add_ticket_fab',
+                child: const Icon(Icons.add),
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
 
 class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final int total;
+  final int blueCount;
+  final int orangeCount;
+  final int redCount;
 
-  const _GreyDashboardHeaderDelegate({required this.total});
+  const _GreyDashboardHeaderDelegate({
+    required this.blueCount,
+    required this.orangeCount,
+    required this.redCount,
+  });
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: Colors.grey.shade200,
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 54,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       margin: const EdgeInsets.only(bottom: 8),
       alignment: Alignment.center,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 12,
+        runSpacing: 4,
         children: [
-          Text(
-            'Total',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade800,
-            ),
-          ),
-          Text(
-            '$total',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
+          _StatusPill(label: 'Blue', count: blueCount, color: Colors.blue),
+          _StatusPill(label: 'Orange', count: orangeCount, color: Colors.orange),
+          _StatusPill(label: 'Red', count: redCount, color: Colors.red),
         ],
       ),
     );
   }
 
   @override
-  double get maxExtent => 48;
+  double get maxExtent => 54;
 
   @override
-  double get minExtent => 48;
+  double get minExtent => 54;
 
   @override
-  bool shouldRebuild(covariant _GreyDashboardHeaderDelegate oldDelegate) => total != oldDelegate.total;
+  bool shouldRebuild(covariant _GreyDashboardHeaderDelegate oldDelegate) =>
+      blueCount != oldDelegate.blueCount ||
+      orangeCount != oldDelegate.orangeCount ||
+      redCount != oldDelegate.redCount;
+}
+
+class _StatusPill extends StatelessWidget {
+  final String label;
+  final int count;
+  final Color color;
+
+  const _StatusPill({
+    required this.label,
+    required this.count,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withOpacity(0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$label $count',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
