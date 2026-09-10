@@ -233,23 +233,12 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 final finalQuoi = quoiController.text.trim();
                 final finalCombien = int.tryParse(combienController.text) ?? ticket.combien;
 
-                final updatedTicket = Ticket(
-                  id: ticket.id,
-                  dateInput: ticket.dateInput,
-                  dateOutput: DateTime.now(),
-                  qui: ticket.qui,
-                  quoi: finalQuoi,
-                  combien: finalCombien,
-                  lanaGarde: false,
-                );
-
                 try {
                   await ApiService.checkAndUpdateTicket(
                     ticketId: ticket.id!,
                     quoi: finalQuoi,
                     combien: finalCombien,
                   );
-                  await ApiService.updateTicket(ticket.id!, updatedTicket);
                   if (context.mounted) Navigator.pop(context);
                   _refreshTickets();
                 } catch (e) {
