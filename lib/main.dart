@@ -309,7 +309,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           return Card(
                             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -325,12 +325,13 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
                                           '${ticket.qui} — ${ticket.quoi}',
                                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 2),
                                         Text('In: ${dateFormat.format(ticket.dateInput)}', style: const TextStyle(fontSize: 12)),
                                         if (ticket.dateOutput != null)
                                           Text('Out: ${dateFormat.format(ticket.dateOutput!)}', style: const TextStyle(color: Colors.green, fontSize: 12))
@@ -339,9 +340,10 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 4),
                                   Container(
-                                    width: 42,
+                                    width: 38,
+                                    padding: EdgeInsets.zero,
                                     decoration: BoxDecoration(
                                       color: Colors.grey.shade100,
                                       borderRadius: BorderRadius.circular(10),
@@ -350,16 +352,18 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         IconButton(
-                                          icon: const Icon(Icons.edit, color: Colors.blue),
+                                          icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
                                           onPressed: () => _showTicketDialog(ticket: ticket),
                                           padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                                         ),
                                         IconButton(
-                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          icon: const Icon(Icons.delete, color: Colors.red, size: 18),
                                           onPressed: () => _deleteTicket(ticket.id!),
                                           padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                                         ),
                                       ],
                                     ),
