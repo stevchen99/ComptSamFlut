@@ -123,7 +123,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       dateInput: dateInput,
                       dateOutput: dateOutput,
                       qui: selectedQui,
-                      quoi: isEditing ? ticket!.quoi : '',
+                      quoi: isEditing ? (ticket!.quoi.isNotEmpty ? ticket.quoi : '') : '',
                       combien: int.tryParse(combienController.text) ?? 1,
                       lanaGarde: lanaGarde,
                     );
@@ -183,12 +183,13 @@ class _TicketListScreenState extends State<TicketListScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
+                final finalQuoi = quoiController.text.trim();
                 final updatedTicket = Ticket(
                   id: ticket.id,
                   dateInput: ticket.dateInput,
                   dateOutput: DateTime.now(),
                   qui: ticket.qui,
-                  quoi: quoiController.text,
+                  quoi: finalQuoi,
                   combien: ticket.combien,
                   lanaGarde: false,
                 );
