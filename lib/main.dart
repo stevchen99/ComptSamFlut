@@ -235,7 +235,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
           final tickets = snapshot.data ?? <Ticket>[];
 
-          final blueCount = tickets.where((ticket) => ticket.dateOutput == null && !ticket.lanaGarde).length;
+          final greenCount = tickets.where((ticket) => ticket.dateOutput == null && !ticket.lanaGarde).length;
           final orangeCount = tickets.where((ticket) => ticket.lanaGarde).length;
           final redCount = tickets.where((ticket) => ticket.dateOutput != null).length;
 
@@ -246,7 +246,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: _GreyDashboardHeaderDelegate(
-                    blueCount: blueCount,
+                    greenCount: greenCount,
                     orangeCount: orangeCount,
                     redCount: redCount,
                   ),
@@ -274,7 +274,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                 children: [
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundColor: ticket.dateOutput != null ? Colors.red : (ticket.lanaGarde ? Colors.orange : Colors.blue),
+                                    backgroundColor: ticket.dateOutput != null ? Colors.red : (ticket.lanaGarde ? Colors.orange : Colors.green),
                                     child: Text(
                                       '${ticket.combien}',
                                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -353,15 +353,19 @@ class _TicketListScreenState extends State<TicketListScreen> {
             Positioned(
               left: 0,
               bottom: 0,
-              child: FloatingActionButton.extended(
+              child: ElevatedButton(
                 onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Checkout')),
                 ),
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                icon: const Icon(Icons.shopping_bag_outlined),
-                label: const Text('Checkout'),
-                heroTag: 'checkout_fab',
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text('Checkout'),
               ),
             ),
             Positioned(
@@ -383,12 +387,12 @@ class _TicketListScreenState extends State<TicketListScreen> {
 }
 
 class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final int blueCount;
+  final int greenCount;
   final int orangeCount;
   final int redCount;
 
   const _GreyDashboardHeaderDelegate({
-    required this.blueCount,
+    required this.greenCount,
     required this.orangeCount,
     required this.redCount,
   });
@@ -406,7 +410,7 @@ class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
         spacing: 12,
         runSpacing: 4,
         children: [
-          _StatusPill(label: 'Blue', count: blueCount, color: Colors.blue),
+          _StatusPill(label: 'Green', count: greenCount, color: Colors.green),
           _StatusPill(label: 'Orange', count: orangeCount, color: Colors.orange),
           _StatusPill(label: 'Red', count: redCount, color: Colors.red),
         ],
@@ -422,7 +426,7 @@ class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _GreyDashboardHeaderDelegate oldDelegate) =>
-      blueCount != oldDelegate.blueCount ||
+      greenCount != oldDelegate.greenCount ||
       orangeCount != oldDelegate.orangeCount ||
       redCount != oldDelegate.redCount;
 }
