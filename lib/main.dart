@@ -99,7 +99,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       onChanged: (val) => setDialogState(() => lanaGarde = val),
                     ),
                     ListTile(
-                      title: Text('Date Entrée: ${DateFormat('dd/MM/yyyy HH:mm').format(dateInput)}'),
+                      title: Text('Date Entrée: ${DateFormat('dd/MM/yyyy').format(dateInput)}'),
                       trailing: const Icon(Icons.calendar_today),
                       onTap: () async {
                         DateTime? picked = await showDatePicker(
@@ -219,7 +219,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
               itemCount: tickets.length,
               itemBuilder: (context, index) {
                 final ticket = tickets[index];
-                final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+                final dateFormat = DateFormat('dd/MM/yyyy');
 
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
