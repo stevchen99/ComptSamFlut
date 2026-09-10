@@ -307,9 +307,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           final dateFormat = DateFormat('dd/MM/yyyy');
 
                           return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -321,25 +321,25 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: 10),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           '${ticket.qui} — ${ticket.quoi}',
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                         ),
-                                        const SizedBox(height: 6),
-                                        Text('In: ${dateFormat.format(ticket.dateInput)}'),
+                                        const SizedBox(height: 4),
+                                        Text('In: ${dateFormat.format(ticket.dateInput)}', style: const TextStyle(fontSize: 12)),
                                         if (ticket.dateOutput != null)
-                                          Text('Out: ${dateFormat.format(ticket.dateOutput!)}', style: const TextStyle(color: Colors.green))
+                                          Text('Out: ${dateFormat.format(ticket.dateOutput!)}', style: const TextStyle(color: Colors.green, fontSize: 12))
                                         else
-                                          const Text('Out: En cours...', style: TextStyle(color: Colors.grey)),
+                                          const Text('Out: En cours...', style: TextStyle(color: Colors.grey, fontSize: 12)),
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 6),
                                   Container(
                                     width: 42,
                                     decoration: BoxDecoration(
