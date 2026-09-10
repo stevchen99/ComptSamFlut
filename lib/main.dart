@@ -247,24 +247,33 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           ),
                       ],
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (ticket.dateOutput == null)
+                    trailing: SizedBox(
+                      width: 40,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (ticket.dateOutput == null)
+                            IconButton(
+                              icon: const Icon(Icons.logout, color: Colors.green),
+                              tooltip: 'Marquer Sortie',
+                              onPressed: () => _markOutput(ticket),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
                           IconButton(
-                            icon: const Icon(Icons.logout, color: Colors.green),
-                            tooltip: 'Marquer Sortie',
-                            onPressed: () => _markOutput(ticket),
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () => _showTicketDialog(ticket: ticket),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                           ),
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _showTicketDialog(ticket: ticket),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteTicket(ticket.id!),
-                        ),
-                      ],
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deleteTicket(ticket.id!),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
