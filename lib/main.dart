@@ -35,6 +35,7 @@ class TicketListScreen extends StatefulWidget {
 
 class _TicketListScreenState extends State<TicketListScreen> {
   late Future<List<Ticket>> _ticketsFuture;
+  List<Ticket> _currentTickets = [];
 
   @override
   void initState() {
@@ -251,6 +252,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
           }
 
           final tickets = snapshot.data ?? <Ticket>[];
+          _currentTickets = tickets;
 
           final availableCount = tickets.where((ticket) => ticket.dateOutput == null && !ticket.lanaGarde).length;
           final lanaCount = tickets.where((ticket) => ticket.lanaGarde).length;
@@ -371,7 +373,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
               left: 0,
               bottom: 0,
               child: ElevatedButton(
-                onPressed: () => _handleCheckout(snapshot.data ?? <Ticket>[]),
+                onPressed: () => _handleCheckout(_currentTickets),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
