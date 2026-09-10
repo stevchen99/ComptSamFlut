@@ -125,7 +125,21 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     final finalQuoi = quoiController.text.trim();
-                    final finalCombien = int.tryParse(combienController.text) ?? 1;
+                    final finalCombien = int.tryParse(combienController.text) ?? 0;
+
+                    if (finalQuoi.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Le champ "Quoi" est obligatoire.')),
+                      );
+                      return;
+                    }
+
+                    if (finalCombien <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Le champ "Combien" doit être supérieur à 0.')),
+                      );
+                      return;
+                    }
 
                     final newTicket = Ticket(
                       id: ticket?.id,
@@ -231,7 +245,21 @@ class _TicketListScreenState extends State<TicketListScreen> {
             ElevatedButton(
               onPressed: () async {
                 final finalQuoi = quoiController.text.trim();
-                final finalCombien = int.tryParse(combienController.text) ?? ticket.combien;
+                final finalCombien = int.tryParse(combienController.text) ?? 0;
+
+                if (finalQuoi.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Le champ "Quoi" est obligatoire.')),
+                  );
+                  return;
+                }
+
+                if (finalCombien <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Le champ "Combien" doit être supérieur à 0.')),
+                  );
+                  return;
+                }
 
                 try {
                   await ApiService.checkAndUpdateTicket(
