@@ -212,6 +212,57 @@ class _TicketListScreenState extends State<TicketListScreen> {
     );
   }
 
+  Map<String, int> _calculateDashboardTotals(List<Ticket> tickets) {
+    final totals = {'Blue': 0, 'Orange': 0, 'Red': 0};
+
+    for (final ticket in tickets) {
+      if (ticket.dateOutput != null) {
+        totals['Red'] = totals['Red']! + ticket.combien;
+      } else if (ticket.lanaGarde) {
+        totals['Orange'] = totals['Orange']! + ticket.combien;
+      } else {
+        totals['Blue'] = totals['Blue']! + ticket.combien;
+      }
+    }
+
+    return totals;
+  }
+
+  Widget _buildTotalCard({required String label, required int total, required Color color}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$total',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -231,115 +282,199 @@ class _TicketListScreenState extends State<TicketListScreen> {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Erreur: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Aucun ticket trouvé.'));
           }
 
-          final tickets = snapshot.data!;
+          final tickets = snapshot.data ?? <Ticket>[];
+          final totals = _calculateDashboardTotals(tickets);
+
           return RefreshIndicator(
             onRefresh: () async => _refreshTickets(),
-            child: ListView.builder(
-              itemCount: tickets.length,
-              itemBuilder: (context, index) {
-                final ticket = tickets[index];
-                final dateFormat = DateFormat('dd/MM/yyyy');
+            child: CustomScrollView(
+              slivers: [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _DashboardHeaderDelegate(
+                    cards: [
+                      _buildTotalCard(label: 'Blue', total: totals['Blue'] ?? 0, color: Colors.blue),
+                      _buildTotalCard(label: 'Orange', total: totals['Orange'] ?? 0, color: Colors.orange),
+                      _buildTotalCard(label: 'Red', total: totals['Red'] ?? 0, color: Colors.red),
+                    ],
+                  ),
+                ),
+                if (tickets.isEmpty)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: Text('Aucun ticket trouvé.')),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.only(bottom: 90),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final ticket = tickets[index];
+                          final dateFormat = DateFormat('dd/MM/yyyy');
 
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundColor: ticket.dateOutput != null ? Colors.red : (ticket.lanaGarde ? Colors.orange : Colors.blue),
-                          child: Text(
-                            '${ticket.combien}',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${ticket.qui} — ${ticket.quoi}',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 6),
-                              Text('In: ${dateFormat.format(ticket.dateInput)}'),
-                              if (ticket.dateOutput != null)
-                                Text('Out: ${dateFormat.format(ticket.dateOutput!)}', style: const TextStyle(color: Colors.green))
-                              else
-                                const Text('Out: En cours...', style: TextStyle(color: Colors.grey)),
-                              if (ticket.lanaGarde)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: const Chip(
-                                    label: Text('Lana Garde', style: TextStyle(fontSize: 10)),
-                                    visualDensity: VisualDensity.compact,
+                          return Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: ticket.dateOutput != null ? Colors.red : (ticket.lanaGarde ? Colors.orange : Colors.blue),
+                                    child: Text(
+                                      '${ticket.combien}',
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
                                   ),
-                                ),
-                              if (ticket.dateOutput == null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Container(
-                                    width: 88,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${ticket.qui} — ${ticket.quoi}',
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text('In: ${dateFormat.format(ticket.dateInput)}'),
+                                        if (ticket.dateOutput != null)
+                                          Text('Out: ${dateFormat.format(ticket.dateOutput!)}', style: const TextStyle(color: Colors.green))
+                                        else
+                                          const Text('Out: En cours...', style: TextStyle(color: Colors.grey)),
+                                        if (ticket.lanaGarde)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 6),
+                                            child: const Chip(
+                                              label: Text('Lana Garde', style: TextStyle(fontSize: 10)),
+                                              visualDensity: VisualDensity.compact,
+                                            ),
+                                          ),
+                                        if (ticket.dateOutput == null)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 8),
+                                            child: Container(
+                                              width: 88,
+                                              decoration: BoxDecoration(
+                                                color: Colors.green.withOpacity(0.12),
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+                                              child: IconButton(
+                                                icon: const Icon(Icons.logout, color: Colors.green),
+                                                tooltip: 'Marquer Sortie',
+                                                onPressed: () => _markOutput(ticket),
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 42,
                                     decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.12),
+                                      color: Colors.grey.shade100,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: IconButton(
-                                      icon: const Icon(Icons.logout, color: Colors.green),
-                                      tooltip: 'Marquer Sortie',
-                                      onPressed: () => _markOutput(ticket),
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit, color: Colors.blue),
+                                          onPressed: () => _showTicketDialog(ticket: ticket),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          onPressed: () => _deleteTicket(ticket.id!),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 42,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _showTicketDialog(ticket: ticket),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                ],
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteTicket(ticket.id!),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                            ),
+                          );
+                        },
+                        childCount: tickets.length,
+                      ),
                     ),
                   ),
-                );
-              },
+              ],
             ),
           );
         },
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Checkout')),
+                ),
+                icon: const Icon(Icons.shopping_cart_checkout),
+                label: const Text('Checkout'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 72),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showTicketDialog(),
         child: const Icon(Icons.add),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
+}
+
+class _DashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _DashboardHeaderDelegate({required this.cards});
+
+  final List<Widget> cards;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: Row(
+        children: List.generate(cards.length, (index) {
+          final card = cards[index];
+          return Expanded(child: Padding(
+            padding: EdgeInsets.only(right: index < cards.length - 1 ? 8 : 0),
+            child: card,
+          ));
+        }),
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 82;
+
+  @override
+  double get minExtent => 82;
+
+  @override
+  bool shouldRebuild(covariant _DashboardHeaderDelegate oldDelegate) => true;
 }
