@@ -46,7 +46,7 @@ class ApiService {
     }
   }
 
-  // POST: Validate stock availability before update
+  // POST: Validate stock availability before checkout/update
   static Future<void> checkAndUpdateTicket({
     required String ticketId,
     required String quoi,
@@ -62,13 +62,22 @@ class ApiService {
       }),
     );
 
-    final data = json.decode(response.body);
-
     if (response.statusCode == 200) {
       return;
     }
 
-    throw Exception(data['message'] ?? 'Failed to validate stock before update');
+    String message = 'Failed to validate stock before update';
+
+    try {
+      final data = json.decode(response.body);
+      if (data is Map && data['message'] != null) {
+        message = data['message'];
+      }
+    } catch (_) {
+      message = response.body.isNotEmpty ? response.body : message;
+    }
+
+    throw Exception(message);
   }
 
   // DELETE: Delete ticket
