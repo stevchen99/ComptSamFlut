@@ -253,7 +253,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       children: [
                         CircleAvatar(
                           radius: 20,
-                          backgroundColor: ticket.lanaGarde ? Colors.orange : Colors.blue,
+                          backgroundColor: ticket.dateOutput != null ? Colors.red : (ticket.lanaGarde ? Colors.orange : Colors.blue),
                           child: Text(
                             '${ticket.combien}',
                             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -282,53 +282,50 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 ),
+                              if (ticket.dateOutput == null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Container(
+                                    width: 88,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: IconButton(
+                                      icon: const Icon(Icons.logout, color: Colors.green),
+                                      tooltip: 'Marquer Sortie',
+                                      onPressed: () => _markOutput(ticket),
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (ticket.dateOutput == null)
-                              Container(
-                                width: 88,
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.logout, color: Colors.green),
-                                  tooltip: 'Marquer Sortie',
-                                  onPressed: () => _markOutput(ticket),
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                ),
+                        Container(
+                          width: 42,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () => _showTicketDialog(ticket: ticket),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                               ),
-                            const SizedBox(height: 6),
-                            Container(
-                              width: 42,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(10),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _deleteTicket(ticket.id!),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                               ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, color: Colors.blue),
-                                    onPressed: () => _showTicketDialog(ticket: ticket),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteTicket(ticket.id!),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
