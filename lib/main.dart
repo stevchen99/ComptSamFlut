@@ -270,32 +270,39 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           ),
                       ],
                     ),
-                    trailing: SizedBox(
-                      width: 40,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (ticket.dateOutput == null)
+                    trailing: ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 42, maxWidth: 42),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (ticket.dateOutput == null)
+                              IconButton(
+                                icon: const Icon(Icons.logout, color: Colors.green),
+                                tooltip: 'Marquer Sortie',
+                                onPressed: () => _markOutput(ticket),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                              ),
                             IconButton(
-                              icon: const Icon(Icons.logout, color: Colors.green),
-                              tooltip: 'Marquer Sortie',
-                              onPressed: () => _markOutput(ticket),
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () => _showTicketDialog(ticket: ticket),
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                             ),
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () => _showTicketDialog(ticket: ticket),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteTicket(ticket.id!),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        ],
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteTicket(ticket.id!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
