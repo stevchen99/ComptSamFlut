@@ -46,6 +46,31 @@ class ApiService {
     }
   }
 
+  // POST: Validate stock availability before update
+  static Future<void> checkAndUpdateTicket({
+    required String ticketId,
+    required String quoi,
+    required int combien,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/check-and-update'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'ticketId': ticketId,
+        'quoi': quoi,
+        'combien': combien,
+      }),
+    );
+
+    final data = json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      return;
+    }
+
+    throw Exception(data['message'] ?? 'Failed to validate stock before update');
+  }
+
   // DELETE: Delete ticket
   static Future<void> deleteTicket(String id) async {
     final response = await http.delete(Uri.parse('$baseUrl/$id'));

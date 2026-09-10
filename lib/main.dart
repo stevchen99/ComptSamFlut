@@ -53,6 +53,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
     final isEditing = ticket != null;
     const fixedQuiOptions = ['Stev', 'Bee', 'Lana'];
     String selectedQui = fixedQuiOptions.contains(ticket?.qui) ? ticket!.qui : fixedQuiOptions.first;
+    final quoiController = TextEditingController(text: ticket?.quoi ?? '');
     final combienController = TextEditingController(text: ticket?.combien.toString() ?? '1');
     bool lanaGarde = ticket?.lanaGarde ?? false;
     DateTime dateInput = ticket?.dateInput ?? DateTime.now();
@@ -83,6 +84,10 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           setDialogState(() => selectedQui = value);
                         }
                       },
+                    ),
+                    TextField(
+                      controller: quoiController,
+                      decoration: const InputDecoration(labelText: 'Quoi'),
                     ),
                     TextField(
                       controller: combienController,
@@ -119,19 +124,26 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
+                    final finalQuoi = quoiController.text.trim();
+                    final finalCombien = int.tryParse(combienController.text) ?? 1;
+
                     final newTicket = Ticket(
                       id: ticket?.id,
                       dateInput: dateInput,
                       dateOutput: dateOutput,
                       qui: selectedQui,
-                      quoi: isEditing ? (ticket!.quoi.isNotEmpty ? ticket.quoi : '') : '',
-                      combien: int.tryParse(combienController.text) ?? 1,
+                      quoi: finalQuoi,
+                      combien: finalCombien,
                       lanaGarde: lanaGarde,
                     );
 
                     try {
                       if (isEditing) {
-                        await ApiService.updateTicket(ticket.id!, newTicket);
+                        await ApiService.checkAndUpdateTicket(
+                          ticketId: ticket.id!,
+                          quoi: finalQuoi,
+                          combien: finalCombien,
+                        );
                       } else {
                         await ApiService.createTicket(newTicket);
                       }
