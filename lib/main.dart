@@ -246,64 +246,80 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: ticket.lanaGarde ? Colors.orange : Colors.blue,
-                      child: Text(
-                        '${ticket.combien}',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    title: Text('${ticket.qui} — ${ticket.quoi}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Column(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('In: ${dateFormat.format(ticket.dateInput)}'),
-                        if (ticket.dateOutput != null)
-                          Text('Out: ${dateFormat.format(ticket.dateOutput!)}', style: const TextStyle(color: Colors.green))
-                        else
-                          const Text('Out: En cours...', style: const TextStyle(color: Colors.grey)),
-                        if (ticket.lanaGarde)
-                          const Chip(
-                            label: Text('Lana Garde', style: TextStyle(fontSize: 10)),
-                            visualDensity: VisualDensity.compact,
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: ticket.lanaGarde ? Colors.orange : Colors.blue,
+                          child: Text(
+                            '${ticket.combien}',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                           ),
-                      ],
-                    ),
-                    trailing: ConstrainedBox(
-                      constraints: const BoxConstraints(minWidth: 42, maxWidth: 42),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (ticket.dateOutput == null)
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${ticket.qui} — ${ticket.quoi}',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 6),
+                              Text('In: ${dateFormat.format(ticket.dateInput)}'),
+                              if (ticket.dateOutput != null)
+                                Text('Out: ${dateFormat.format(ticket.dateOutput!)}', style: const TextStyle(color: Colors.green))
+                              else
+                                const Text('Out: En cours...', style: TextStyle(color: Colors.grey)),
+                              if (ticket.lanaGarde)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: const Chip(
+                                    label: Text('Lana Garde', style: TextStyle(fontSize: 10)),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 42,
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (ticket.dateOutput == null)
+                                IconButton(
+                                  icon: const Icon(Icons.logout, color: Colors.green),
+                                  tooltip: 'Marquer Sortie',
+                                  onPressed: () => _markOutput(ticket),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                ),
                               IconButton(
-                                icon: const Icon(Icons.logout, color: Colors.green),
-                                tooltip: 'Marquer Sortie',
-                                onPressed: () => _markOutput(ticket),
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () => _showTicketDialog(ticket: ticket),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                               ),
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _showTicketDialog(ticket: ticket),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deleteTicket(ticket.id!),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                            ),
-                          ],
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _deleteTicket(ticket.id!),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 );
