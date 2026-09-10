@@ -52,7 +52,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
     final isEditing = ticket != null;
     const fixedQuiOptions = ['Stev', 'Bee', 'Lana'];
     String selectedQui = fixedQuiOptions.contains(ticket?.qui) ? ticket!.qui : fixedQuiOptions.first;
-    final quoiController = TextEditingController(text: ticket?.quoi ?? '');
     final combienController = TextEditingController(text: ticket?.combien.toString() ?? '1');
     bool lanaGarde = ticket?.lanaGarde ?? false;
     DateTime dateInput = ticket?.dateInput ?? DateTime.now();
@@ -83,10 +82,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           setDialogState(() => selectedQui = value);
                         }
                       },
-                    ),
-                    TextField(
-                      controller: quoiController,
-                      decoration: const InputDecoration(labelText: 'Quoi (Objet)'),
                     ),
                     TextField(
                       controller: combienController,
@@ -128,7 +123,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       dateInput: dateInput,
                       dateOutput: dateOutput,
                       qui: selectedQui,
-                      quoi: quoiController.text,
+                      quoi: isEditing ? ticket!.quoi : '',
                       combien: int.tryParse(combienController.text) ?? 1,
                       lanaGarde: lanaGarde,
                     );
@@ -168,25 +163,52 @@ class _TicketListScreenState extends State<TicketListScreen> {
     }
   }
 
-  void _markOutput(Ticket ticket) async {
-    final updatedTicket = Ticket(
-      id: ticket.id,
-      dateInput: ticket.dateInput,
-      dateOutput: DateTime.now(),
-      qui: ticket.qui,
-      quoi: ticket.quoi,
-      combien: ticket.combien,
-      lanaGarde: false,
-    );
+  void _markOutput(Ticket ticket) {
+    final quoiController = TextEditingController(text: ticket.quoi);
 
-    try {
-      await ApiService.updateTicket(ticket.id!, updatedTicket);
-      _refreshTickets();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur d\'actualisation: $e')),
-      );
-    }
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Sortie Ticket'),
+          content: TextField(
+            controller: quoiController,
+            decoration: const InputDecoration(labelText: 'Quoi (Objet)'),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final updatedTicket = Ticket(
+                  id: ticket.id,
+                  dateInput: ticket.dateInput,
+                  dateOutput: DateTime.now(),
+                  qui: ticket.qui,
+                  quoi: quoiController.text,
+                  combien: ticket.combien,
+                  lanaGarde: false,
+                );
+
+                try {
+                  await ApiService.updateTicket(ticket.id!, updatedTicket);
+                  if (context.mounted) Navigator.pop(context);
+                  _refreshTickets();
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erreur d\'actualisation: $e')),
+                  );
+                }
+              },
+              child: const Text('Valider'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
