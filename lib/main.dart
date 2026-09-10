@@ -235,13 +235,15 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
           final tickets = snapshot.data ?? <Ticket>[];
 
+          final total = tickets.fold<int>(0, (sum, ticket) => sum + ticket.combien);
+
           return RefreshIndicator(
             onRefresh: () async => _refreshTickets(),
             child: CustomScrollView(
               slivers: [
-                const SliverPersistentHeader(
+                SliverPersistentHeader(
                   pinned: true,
-                  delegate: _GreyDashboardHeaderDelegate(),
+                  delegate: _GreyDashboardHeaderDelegate(total: total),
                 ),
                 if (tickets.isEmpty)
                   const SliverFillRemaining(
@@ -337,33 +339,31 @@ class _TicketListScreenState extends State<TicketListScreen> {
           );
         },
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              ElevatedButton(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Checkout')),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text('Checkout'),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            FloatingActionButton.extended(
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Checkout')),
               ),
-            ],
-          ),
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.shopping_bag_outlined),
+              label: const Text('Checkout'),
+              heroTag: 'checkout_fab',
+            ),
+            const SizedBox(height: 12),
+            FloatingActionButton(
+              onPressed: () => _showTicketDialog(),
+              tooltip: 'Nouveau ticket',
+              heroTag: 'add_ticket_fab',
+              child: const Icon(Icons.add),
+            ),
+          ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showTicketDialog(),
-        child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
@@ -371,23 +371,48 @@ class _TicketListScreenState extends State<TicketListScreen> {
 }
 
 class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _GreyDashboardHeaderDelegate();
+  final int total;
+
+  const _GreyDashboardHeaderDelegate({required this.total});
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: Colors.grey.shade200,
-      height: 24,
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       margin: const EdgeInsets.only(bottom: 8),
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Total',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
+          ),
+          Text(
+            '$total',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   @override
-  double get maxExtent => 24;
+  double get maxExtent => 48;
 
   @override
-  double get minExtent => 24;
+  double get minExtent => 48;
 
   @override
-  bool shouldRebuild(covariant _GreyDashboardHeaderDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant _GreyDashboardHeaderDelegate oldDelegate) => total != oldDelegate.total;
 }
