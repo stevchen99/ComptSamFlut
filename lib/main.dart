@@ -212,57 +212,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
     );
   }
 
-  Map<String, int> _calculateDashboardTotals(List<Ticket> tickets) {
-    final totals = {'Blue': 0, 'Orange': 0, 'Red': 0};
-
-    for (final ticket in tickets) {
-      if (ticket.dateOutput != null) {
-        totals['Red'] = totals['Red']! + ticket.combien;
-      } else if (ticket.lanaGarde) {
-        totals['Orange'] = totals['Orange']! + ticket.combien;
-      } else {
-        totals['Blue'] = totals['Blue']! + ticket.combien;
-      }
-    }
-
-    return totals;
-  }
-
-  Widget _buildTotalCard({required String label, required int total, required Color color}) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.35)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '$total',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -285,21 +234,14 @@ class _TicketListScreenState extends State<TicketListScreen> {
           }
 
           final tickets = snapshot.data ?? <Ticket>[];
-          final totals = _calculateDashboardTotals(tickets);
 
           return RefreshIndicator(
             onRefresh: () async => _refreshTickets(),
             child: CustomScrollView(
               slivers: [
-                SliverPersistentHeader(
+                const SliverPersistentHeader(
                   pinned: true,
-                  delegate: _DashboardHeaderDelegate(
-                    cards: [
-                      _buildTotalCard(label: 'Blue', total: totals['Blue'] ?? 0, color: Colors.blue),
-                      _buildTotalCard(label: 'Orange', total: totals['Orange'] ?? 0, color: Colors.orange),
-                      _buildTotalCard(label: 'Red', total: totals['Red'] ?? 0, color: Colors.red),
-                    ],
-                  ),
+                  delegate: _GreyDashboardHeaderDelegate(),
                 ),
                 if (tickets.isEmpty)
                   const SliverFillRemaining(
@@ -353,23 +295,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                               visualDensity: VisualDensity.compact,
                                             ),
                                           ),
-                                        if (ticket.dateOutput == null)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 8),
-                                            child: Container(
-                                              width: 88,
-                                              decoration: BoxDecoration(
-                                                color: Colors.green.withOpacity(0.12),
-                                                borderRadius: BorderRadius.circular(10),
-                                              ),
-                                              child: IconButton(
-                                                icon: const Icon(Icons.logout, color: Colors.green),
-                                                tooltip: 'Marquer Sortie',
-                                                onPressed: () => _markOutput(ticket),
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                              ),
-                                            ),
-                                          ),
                                       ],
                                     ),
                                   ),
@@ -416,24 +341,22 @@ class _TicketListScreenState extends State<TicketListScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              ElevatedButton.icon(
+              ElevatedButton(
                 onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Checkout')),
                 ),
-                icon: const Icon(Icons.shopping_cart_checkout),
-                label: const Text('Checkout'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
+                child: const Text('Checkout'),
               ),
-              const SizedBox(width: 72),
             ],
           ),
         ),
@@ -447,34 +370,24 @@ class _TicketListScreenState extends State<TicketListScreen> {
   }
 }
 
-class _DashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _DashboardHeaderDelegate({required this.cards});
-
-  final List<Widget> cards;
+class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _GreyDashboardHeaderDelegate();
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-      child: Row(
-        children: List.generate(cards.length, (index) {
-          final card = cards[index];
-          return Expanded(child: Padding(
-            padding: EdgeInsets.only(right: index < cards.length - 1 ? 8 : 0),
-            child: card,
-          ));
-        }),
-      ),
+      color: Colors.grey.shade200,
+      height: 24,
+      margin: const EdgeInsets.only(bottom: 8),
     );
   }
 
   @override
-  double get maxExtent => 82;
+  double get maxExtent => 24;
 
   @override
-  double get minExtent => 82;
+  double get minExtent => 24;
 
   @override
-  bool shouldRebuild(covariant _DashboardHeaderDelegate oldDelegate) => true;
+  bool shouldRebuild(covariant _GreyDashboardHeaderDelegate oldDelegate) => false;
 }

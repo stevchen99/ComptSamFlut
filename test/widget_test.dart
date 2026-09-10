@@ -10,12 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:comtsamflut/main.dart';
 
 void main() {
-  testWidgets('shows summary dashboard and checkout action', (WidgetTester tester) async {
+  testWidgets('shows checkout button', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
-    expect(find.text('Blue'), findsOneWidget);
-    expect(find.text('Orange'), findsOneWidget);
-    expect(find.text('Red'), findsOneWidget);
     expect(find.text('Checkout'), findsOneWidget);
   });
 }
