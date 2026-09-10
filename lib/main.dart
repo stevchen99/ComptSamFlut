@@ -235,9 +235,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
           final tickets = snapshot.data ?? <Ticket>[];
 
-          final greenCount = tickets.where((ticket) => ticket.dateOutput == null && !ticket.lanaGarde).length;
-          final orangeCount = tickets.where((ticket) => ticket.lanaGarde).length;
-          final redCount = tickets.where((ticket) => ticket.dateOutput != null).length;
+          final availableCount = tickets.where((ticket) => ticket.dateOutput == null && !ticket.lanaGarde).length;
+          final lanaCount = tickets.where((ticket) => ticket.lanaGarde).length;
+          final usedCount = tickets.where((ticket) => ticket.dateOutput != null).length;
 
           return RefreshIndicator(
             onRefresh: () async => _refreshTickets(),
@@ -246,9 +246,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: _GreyDashboardHeaderDelegate(
-                    greenCount: greenCount,
-                    orangeCount: orangeCount,
-                    redCount: redCount,
+                    availableCount: availableCount,
+                    lanaCount: lanaCount,
+                    usedCount: usedCount,
                   ),
                 ),
                 if (tickets.isEmpty)
@@ -354,9 +354,22 @@ class _TicketListScreenState extends State<TicketListScreen> {
               left: 0,
               bottom: 0,
               child: ElevatedButton(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Checkout')),
-                ),
+                onPressed: () {
+                  final activeTicket = tickets.isNotEmpty
+                      ? tickets.firstWhere(
+                          (ticket) => ticket.dateOutput == null && !ticket.lanaGarde,
+                          orElse: () => tickets.first,
+                        )
+                      : null;
+
+                  if (activeTicket != null) {
+                    _markOutput(activeTicket);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Aucun ticket disponible pour checkout')),
+                    );
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
@@ -387,14 +400,14 @@ class _TicketListScreenState extends State<TicketListScreen> {
 }
 
 class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final int greenCount;
-  final int orangeCount;
-  final int redCount;
+  final int availableCount;
+  final int lanaCount;
+  final int usedCount;
 
   const _GreyDashboardHeaderDelegate({
-    required this.greenCount,
-    required this.orangeCount,
-    required this.redCount,
+    required this.availableCount,
+    required this.lanaCount,
+    required this.usedCount,
   });
 
   @override
@@ -410,9 +423,9 @@ class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
         spacing: 12,
         runSpacing: 4,
         children: [
-          _StatusPill(label: 'Green', count: greenCount, color: Colors.green),
-          _StatusPill(label: 'Orange', count: orangeCount, color: Colors.orange),
-          _StatusPill(label: 'Red', count: redCount, color: Colors.red),
+          _StatusPill(label: 'Available', count: availableCount, color: Colors.green),
+          _StatusPill(label: 'Lana', count: lanaCount, color: Colors.orange),
+          _StatusPill(label: 'Used', count: usedCount, color: Colors.red),
         ],
       ),
     );
@@ -426,9 +439,9 @@ class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _GreyDashboardHeaderDelegate oldDelegate) =>
-      greenCount != oldDelegate.greenCount ||
-      orangeCount != oldDelegate.orangeCount ||
-      redCount != oldDelegate.redCount;
+      availableCount != oldDelegate.availableCount ||
+      lanaCount != oldDelegate.lanaCount ||
+      usedCount != oldDelegate.usedCount;
 }
 
 class _StatusPill extends StatelessWidget {
