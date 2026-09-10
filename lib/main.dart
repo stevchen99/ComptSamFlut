@@ -200,16 +200,28 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
   void _markOutput(Ticket ticket) {
     final quoiController = TextEditingController(text: ticket.quoi);
+    final combienController = TextEditingController(text: ticket.combien.toString());
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Sortie Ticket'),
-          content: TextField(
-            controller: quoiController,
-            decoration: const InputDecoration(labelText: 'Quoi (Objet)'),
-            autofocus: true,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: quoiController,
+                decoration: const InputDecoration(labelText: 'Quoi (Objet)'),
+                autofocus: true,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: combienController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Combien'),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -219,17 +231,24 @@ class _TicketListScreenState extends State<TicketListScreen> {
             ElevatedButton(
               onPressed: () async {
                 final finalQuoi = quoiController.text.trim();
+                final finalCombien = int.tryParse(combienController.text) ?? ticket.combien;
+
                 final updatedTicket = Ticket(
                   id: ticket.id,
                   dateInput: ticket.dateInput,
                   dateOutput: DateTime.now(),
                   qui: ticket.qui,
                   quoi: finalQuoi,
-                  combien: ticket.combien,
+                  combien: finalCombien,
                   lanaGarde: false,
                 );
 
                 try {
+                  await ApiService.checkAndUpdateTicket(
+                    ticketId: ticket.id!,
+                    quoi: finalQuoi,
+                    combien: finalCombien,
+                  );
                   await ApiService.updateTicket(ticket.id!, updatedTicket);
                   if (context.mounted) Navigator.pop(context);
                   _refreshTickets();
