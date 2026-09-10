@@ -1,59 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 import 'models/ticket.dart';
-
-// --- API SERVICE ---
-class ApiService {
-  static const String baseUrl = 'https://mern-back-comptag-sam.vercel.app/api/tickets';
-
-  static Future<List<Ticket>> fetchTickets() async {
-    final response = await http.get(Uri.parse(baseUrl));
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Ticket.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load tickets');
-    }
-  }
-
-  static Future<Ticket> createTicket(Ticket ticket) async {
-    final response = await http.post(
-      Uri.parse(baseUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(ticket.toJson()),
-    );
-
-    if (response.statusCode == 201) {
-      return Ticket.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to create ticket');
-    }
-  }
-
-  static Future<Ticket> updateTicket(String id, Ticket ticket) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(ticket.toJson()),
-    );
-
-    if (response.statusCode == 200) {
-      return Ticket.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to update ticket');
-    }
-  }
-
-  static Future<void> deleteTicket(String id) async {
-    final response = await http.delete(Uri.parse('$baseUrl/$id'));
-    if (response.statusCode != 200) {
-      throw Exception('Failed to delete ticket');
-    }
-  }
-}
+import 'services/api_service.dart';
 
 // --- FLUTTER APPLICATION ---
 void main() {
