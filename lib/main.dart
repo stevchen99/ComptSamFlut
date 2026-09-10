@@ -50,7 +50,8 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
   void _showTicketDialog({Ticket? ticket}) {
     final isEditing = ticket != null;
-    final quiController = TextEditingController(text: ticket?.qui ?? '');
+    const fixedQuiOptions = ['Stev', 'Bee', 'Lana'];
+    String selectedQui = fixedQuiOptions.contains(ticket?.qui) ? ticket!.qui : fixedQuiOptions.first;
     final quoiController = TextEditingController(text: ticket?.quoi ?? '');
     final combienController = TextEditingController(text: ticket?.combien.toString() ?? '1');
     bool lanaGarde = ticket?.lanaGarde ?? false;
@@ -68,9 +69,20 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(
-                      controller: quiController,
+                    DropdownButtonFormField<String>(
+                      value: fixedQuiOptions.contains(selectedQui) ? selectedQui : fixedQuiOptions.first,
                       decoration: const InputDecoration(labelText: 'Qui (Nom)'),
+                      items: fixedQuiOptions
+                          .map((value) => DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() => selectedQui = value);
+                        }
+                      },
                     ),
                     TextField(
                       controller: quoiController,
@@ -115,7 +127,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       id: ticket?.id,
                       dateInput: dateInput,
                       dateOutput: dateOutput,
-                      qui: quiController.text,
+                      qui: selectedQui,
                       quoi: quoiController.text,
                       combien: int.tryParse(combienController.text) ?? 1,
                       lanaGarde: lanaGarde,
