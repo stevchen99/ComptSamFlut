@@ -3,7 +3,7 @@ class Ticket {
   final DateTime dateInput;
   final DateTime? dateOutput;
   final String qui;
-  final String quoi;
+  final String? quoi;
   final int combien;
   final bool lanaGarde;
 
@@ -12,7 +12,7 @@ class Ticket {
     required this.dateInput,
     this.dateOutput,
     required this.qui,
-    required this.quoi,
+    this.quoi,
     required this.combien,
     required this.lanaGarde,
   });

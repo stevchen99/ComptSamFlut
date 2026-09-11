@@ -152,7 +152,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       dateInput: dateInput,
                       dateOutput: dateOutput,
                       qui: selectedQui,
-                      quoi: finalQuoi,
+                      quoi: finalQuoi ?? '',
                       combien: finalCombien,
                       lanaGarde: lanaGarde,
                     );
