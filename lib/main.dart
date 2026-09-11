@@ -52,6 +52,8 @@ class _TicketListScreenState extends State<TicketListScreen> {
     final isEditing = ticket != null;
     const fixedQuiOptions = ['Stev', 'Bee', 'Lana'];
     String selectedQui = fixedQuiOptions.contains(ticket?.qui) ? ticket!.qui : fixedQuiOptions.first;
+    
+    // Only used when editing an existing ticket
     final quoiController = TextEditingController(text: ticket?.quoi ?? '');
     final combienController = TextEditingController(text: ticket?.combien.toString() ?? '1');
     bool lanaGarde = ticket?.lanaGarde ?? false;
@@ -84,10 +86,15 @@ class _TicketListScreenState extends State<TicketListScreen> {
                         }
                       },
                     ),
-                    TextField(
-                      controller: quoiController,
-                      decoration: const InputDecoration(labelText: 'Quoi'),
-                    ),
+                    
+                    // Show "Quoi" ONLY when editing
+                    if (isEditing) ...[
+                      TextField(
+                        controller: quoiController,
+                        decoration: const InputDecoration(labelText: 'Quoi'),
+                      ),
+                    ],
+
                     TextField(
                       controller: combienController,
                       keyboardType: TextInputType.number,
@@ -123,12 +130,13 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final finalQuoi = quoiController.text.trim();
+                    final finalQuoi = isEditing ? quoiController.text.trim() : null;
                     final finalCombien = int.tryParse(combienController.text) ?? 0;
 
-                    if (finalQuoi.isEmpty) {
+                    // Validation for "Quoi" only during edit
+                    if (isEditing && (finalQuoi == null || finalQuoi.isEmpty)) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Le champ "Quoi" est obligatoire.')),
+                        const SnackBar(content: Text('Le champ "Quoi" est obligatoire en modification.')),
                       );
                       return;
                     }
@@ -348,6 +356,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                         (context, index) {
                           final ticket = tickets[index];
                           final dateFormat = DateFormat('dd/MM/yyyy');
+                          final displayQuoi = (ticket.quoi != null && ticket.quoi!.isNotEmpty) ? ticket.quoi : '—';
 
                           return Card(
                             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -371,7 +380,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          '${ticket.qui} — ${ticket.quoi}',
+                                          '${ticket.qui} — $displayQuoi',
                                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                         ),
                                         const SizedBox(height: 2),
