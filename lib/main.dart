@@ -49,11 +49,12 @@ class _TicketListScreenState extends State<TicketListScreen> {
   }
 
   void _showTicketDialog({Ticket? ticket}) {
-    final isEditing = ticket != null;
+    // Explicitly check if ticket has a valid ID to determine edit mode
+    final bool isEditing = ticket != null && ticket.id != null && ticket.id!.isNotEmpty;
+    
     const fixedQuiOptions = ['Stev', 'Bee', 'Lana'];
     String selectedQui = fixedQuiOptions.contains(ticket?.qui) ? ticket!.qui : fixedQuiOptions.first;
     
-    // Only used when editing an existing ticket
     final quoiController = TextEditingController(text: ticket?.quoi ?? '');
     final combienController = TextEditingController(text: ticket?.combien.toString() ?? '1');
     bool lanaGarde = ticket?.lanaGarde ?? false;
@@ -86,14 +87,13 @@ class _TicketListScreenState extends State<TicketListScreen> {
                         }
                       },
                     ),
-                    
-                    // Show "Quoi" ONLY when editing
-                    if (isEditing) ...[
+
+                    // STRICT CHECK: "Quoi" input renders ONLY when editing an existing ticket ID
+                    if (isEditing)
                       TextField(
                         controller: quoiController,
                         decoration: const InputDecoration(labelText: 'Quoi'),
                       ),
-                    ],
 
                     TextField(
                       controller: combienController,
@@ -133,7 +133,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
                     final finalQuoi = isEditing ? quoiController.text.trim() : null;
                     final finalCombien = int.tryParse(combienController.text) ?? 0;
 
-                    // Validation for "Quoi" only during edit
                     if (isEditing && (finalQuoi == null || finalQuoi.isEmpty)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Le champ "Quoi" est obligatoire en modification.')),
@@ -160,7 +159,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
                     try {
                       if (isEditing) {
-                        await ApiService.updateTicket(ticket.id!, ticketToSave);
+                        await ApiService.updateTicket(ticket!.id!, ticketToSave);
                       } else {
                         await ApiService.createTicket(ticketToSave);
                       }
