@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'models/ticket.dart';
 import 'services/api_service.dart';
 
-// --- FLUTTER APPLICATION ---
 void main() {
   runApp(const MyApp());
 }
@@ -141,7 +140,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       return;
                     }
 
-                    final newTicket = Ticket(
+                    final ticketToSave = Ticket(
                       id: ticket?.id,
                       dateInput: dateInput,
                       dateOutput: dateOutput,
@@ -153,13 +152,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
                     try {
                       if (isEditing) {
-                        await ApiService.checkAndUpdateTicket(
-                          ticketId: ticket.id!,
-                          quoi: finalQuoi,
-                          combien: finalCombien,
-                        );
+                        await ApiService.updateTicket(ticket.id!, ticketToSave);
                       } else {
-                        await ApiService.createTicket(newTicket);
+                        await ApiService.createTicket(ticketToSave);
                       }
                       if (context.mounted) Navigator.pop(context);
                       _refreshTickets();
