@@ -46,19 +46,18 @@ class ApiService {
     }
   }
 
-  // POST: Validate stock availability before checkout/update for a single ticket
-  static Future<void> checkAndUpdateTicket({
-    required String ticketId,
+  // POST: Batch Checkout using only 'quoi' and the count of checked tickets
+  static Future<void> batchCheckout({
+    required List<String> ticketIds,
     required String quoi,
-    required int combien,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/check-and-update'),
+      Uri.parse('$baseUrl/checkout'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
-        'ticketId': ticketId,
+        'ticketIds': ticketIds,
         'quoi': quoi,
-        'combien': combien,
+        'count': ticketIds.length,
       }),
     );
 
@@ -66,8 +65,22 @@ class ApiService {
       return;
     }
 
-    String message = 'Failed to validate stock before update';
+    // Fallback logic if backend expects individual updates
+    if (response.statusCode == 404) {
+      for (final id in ticketIds) {
+        await http.put(
+          Uri.parse('$baseUrl/$id'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'quoi': quoi,
+            'dateOutput': DateTime.now().toIso8601String(),
+          }),
+        );
+      }
+      return;
+    }
 
+    String message = 'Failed to execute checkout';
     try {
       final data = json.decode(response.body);
       if (data is Map && data['message'] != null) {
@@ -78,22 +91,6 @@ class ApiService {
     }
 
     throw Exception(message);
-  }
-
-  // POST: Batch Checkout ONLY for the selected tickets passed in
-  static Future<void> batchCheckout({
-    required List<Ticket> tickets,
-    required String quoi,
-  }) async {
-    for (final ticket in tickets) {
-      if (ticket.id != null) {
-        await checkAndUpdateTicket(
-          ticketId: ticket.id!,
-          quoi: quoi,
-          combien: ticket.combien,
-        );
-      }
-    }
   }
 
   // DELETE: Delete ticket

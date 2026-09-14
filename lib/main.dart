@@ -218,22 +218,22 @@ class _TicketListScreenState extends State<TicketListScreen> {
     }
   }
 
-  // Checkout Dialog - Processes strictly ONLY checked tickets
-  void _showCheckoutDialog(List<Ticket> selectedTickets) {
+  // Checkout Dialog - only passes quoi and the exact list of checked ticket IDs
+  void _showCheckoutDialog(List<String> checkedTicketIds) {
     final quoiController = TextEditingController();
-    final int howManyChecked = selectedTickets.length;
+    final int count = checkedTicketIds.length;
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Checkout ($howManyChecked ticket${howManyChecked > 1 ? 's' : ''})'),
+          title: Text('Checkout ($count ticket${count > 1 ? 's' : ''})'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'How many: $howManyChecked',
+                'Nombre à valider: $count',
                 style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
               ),
               const SizedBox(height: 12),
@@ -265,7 +265,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
                 try {
                   await ApiService.batchCheckout(
-                    tickets: selectedTickets,
+                    ticketIds: checkedTicketIds,
                     quoi: finalQuoi,
                   );
                   if (context.mounted) Navigator.pop(context);
@@ -285,7 +285,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
   }
 
   void _handleCheckout() {
-    // Check that at least 1 checkbox is selected
     if (_selectedTicketIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -296,12 +295,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
       return;
     }
 
-    // Strictly filter to process ONLY checked tickets matching selected IDs
-    final selectedTickets = _currentTickets
-        .where((ticket) => ticket.id != null && _selectedTicketIds.contains(ticket.id))
-        .toList();
-
-    _showCheckoutDialog(selectedTickets);
+    _showCheckoutDialog(_selectedTicketIds.toList());
   }
 
   @override
@@ -358,8 +352,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           final ticket = tickets[index];
                           final dateFormat = DateFormat('dd/MM/yyyy');
                           final displayQuoi = (ticket.quoi != null && ticket.quoi!.isNotEmpty) ? ticket.quoi : '—';
-                          
-                          // Check conditions
+
                           final bool isUsed = ticket.dateOutput != null;
                           final bool isAvailableForCheckout = !isUsed && !ticket.lanaGarde;
                           final bool isChecked = ticket.id != null && _selectedTicketIds.contains(ticket.id);
@@ -371,7 +364,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // Combien circle avatar
                                   CircleAvatar(
                                     radius: 20,
                                     backgroundColor: isUsed
@@ -383,7 +375,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                     ),
                                   ),
 
-                                  // 1. Hide checkbox completely if ticket is used or on Lana Garde
+                                  // Hide checkbox completely when ticket is used or on Lana Garde
                                   if (isAvailableForCheckout)
                                     Checkbox(
                                       value: isChecked,
@@ -398,7 +390,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                       },
                                     )
                                   else
-                                    const SizedBox(width: 12), // Spacer when checkbox is hidden
+                                    const SizedBox(width: 12),
 
                                   const SizedBox(width: 6),
                                   Expanded(
