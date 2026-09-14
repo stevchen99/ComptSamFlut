@@ -55,8 +55,12 @@ class _TicketListScreenState extends State<TicketListScreen> {
     const fixedQuiOptions = ['Stev', 'Bee', 'Lana'];
     String selectedQui = fixedQuiOptions.contains(ticket?.qui) ? ticket!.qui : fixedQuiOptions.first;
     
+    const combienOptions = [7, 10];
+    int selectedCombien = (ticket != null && combienOptions.contains(ticket.combien)) 
+        ? ticket.combien 
+        : 7;
+
     final quoiController = TextEditingController(text: ticket?.quoi ?? '');
-    final combienController = TextEditingController(text: ticket?.combien.toString() ?? '1');
     bool lanaGarde = ticket?.lanaGarde ?? false;
     DateTime dateInput = ticket?.dateInput ?? DateTime.now();
     DateTime? dateOutput = ticket?.dateOutput;
@@ -95,10 +99,20 @@ class _TicketListScreenState extends State<TicketListScreen> {
                         decoration: const InputDecoration(labelText: 'Quoi'),
                       ),
 
-                    TextField(
-                      controller: combienController,
-                      keyboardType: TextInputType.number,
+                    DropdownButtonFormField<int>(
+                      value: selectedCombien,
                       decoration: const InputDecoration(labelText: 'Combien'),
+                      items: combienOptions
+                          .map((value) => DropdownMenuItem<int>(
+                                value: value,
+                                child: Text('$value'),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() => selectedCombien = value);
+                        }
+                      },
                     ),
                     SwitchListTile(
                       title: const Text('Lana Garde'),
@@ -131,18 +145,10 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     final finalQuoi = isEditing ? quoiController.text.trim() : null;
-                    final finalCombien = int.tryParse(combienController.text) ?? 0;
 
                     if (isEditing && (finalQuoi == null || finalQuoi.isEmpty)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Le champ "Quoi" est obligatoire en modification.')),
-                      );
-                      return;
-                    }
-
-                    if (finalCombien <= 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Le champ "Combien" doit être supérieur à 0.')),
                       );
                       return;
                     }
@@ -153,7 +159,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       dateOutput: dateOutput,
                       qui: selectedQui,
                       quoi: finalQuoi ?? '',
-                      combien: finalCombien,
+                      combien: selectedCombien,
                       lanaGarde: lanaGarde,
                     );
 
@@ -216,70 +222,77 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
   void _markOutput(Ticket ticket) {
     final quoiController = TextEditingController(text: ticket.quoi);
-    final combienController = TextEditingController(text: ticket.combien.toString());
+    const combienOptions = [7, 10];
+    int selectedCombien = combienOptions.contains(ticket.combien) ? ticket.combien : 7;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Sortie Ticket'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: quoiController,
-                decoration: const InputDecoration(labelText: 'Quoi (Objet)'),
-                autofocus: true,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Sortie Ticket'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: quoiController,
+                    decoration: const InputDecoration(labelText: 'Quoi (Objet)'),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    value: selectedCombien,
+                    decoration: const InputDecoration(labelText: 'Combien'),
+                    items: combienOptions
+                        .map((value) => DropdownMenuItem<int>(
+                              value: value,
+                              child: Text('$value'),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() => selectedCombien = value);
+                      }
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: combienController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Combien'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final finalQuoi = quoiController.text.trim();
-                final finalCombien = int.tryParse(combienController.text) ?? 0;
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Annuler'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final finalQuoi = quoiController.text.trim();
 
-                if (finalQuoi.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Le champ "Quoi" est obligatoire.')),
-                  );
-                  return;
-                }
+                    if (finalQuoi.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Le champ "Quoi" est obligatoire.')),
+                      );
+                      return;
+                    }
 
-                if (finalCombien <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Le champ "Combien" doit être supérieur à 0.')),
-                  );
-                  return;
-                }
-
-                try {
-                  await ApiService.checkAndUpdateTicket(
-                    ticketId: ticket.id!,
-                    quoi: finalQuoi,
-                    combien: finalCombien,
-                  );
-                  if (context.mounted) Navigator.pop(context);
-                  _refreshTickets();
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Erreur d\'actualisation: $e')),
-                  );
-                }
-              },
-              child: const Text('Valider'),
-            ),
-          ],
+                    try {
+                      await ApiService.checkAndUpdateTicket(
+                        ticketId: ticket.id!,
+                        quoi: finalQuoi,
+                        combien: selectedCombien,
+                      );
+                      if (context.mounted) Navigator.pop(context);
+                      _refreshTickets();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erreur d\'actualisation: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('Valider'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
