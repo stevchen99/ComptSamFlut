@@ -50,6 +50,16 @@ class _TicketListScreenState extends State<TicketListScreen> {
     });
   }
 
+  // Helper method to assign a priority rank for ordering:
+  // 0 -> Available (dateOutput == null && !lanaGarde)
+  // 1 -> Lana Garde (dateOutput == null && lanaGarde)
+  // 2 -> Used (dateOutput != null)
+  int _getTicketPriority(Ticket ticket) {
+    if (ticket.dateOutput != null) return 2;
+    if (ticket.lanaGarde) return 1;
+    return 0;
+  }
+
   void _showTicketDialog({Ticket? ticket}) {
     final bool isEditing = ticket != null && ticket.id != null && ticket.id!.isNotEmpty;
 
@@ -324,12 +334,26 @@ class _TicketListScreenState extends State<TicketListScreen> {
             return Center(child: Text('Erreur: ${snapshot.error}'));
           }
 
-          final tickets = snapshot.data ?? <Ticket>[];
-          _currentTickets = tickets;
+          final rawTickets = snapshot.data ?? <Ticket>[];
 
-          final availableCount = tickets.where((ticket) => ticket.dateOutput == null && !ticket.lanaGarde).length;
-          final lanaCount = tickets.where((ticket) => ticket.lanaGarde).length;
-          final usedCount = tickets.where((ticket) => ticket.dateOutput != null).length;
+          // Compute Counts
+          final availableCount = rawTickets.where((t) => t.dateOutput == null && !t.lanaGarde).length;
+          final lanaCount = rawTickets.where((t) => t.lanaGarde).length;
+          final usedCount = rawTickets.where((t) => t.dateOutput != null).length;
+
+          // Order list: Available (0) -> Lana (1) -> Used (2)
+          // Secondary sort: Date Input descending (newest first)
+          final sortedTickets = List<Ticket>.from(rawTickets)
+            ..sort((a, b) {
+              int priorityA = _getTicketPriority(a);
+              int priorityB = _getTicketPriority(b);
+              if (priorityA != priorityB) {
+                return priorityA.compareTo(priorityB);
+              }
+              return b.dateInput.compareTo(a.dateInput);
+            });
+
+          _currentTickets = sortedTickets;
 
           return RefreshIndicator(
             onRefresh: () async => _refreshTickets(),
@@ -343,7 +367,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                     usedCount: usedCount,
                   ),
                 ),
-                if (tickets.isEmpty)
+                if (sortedTickets.isEmpty)
                   const SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(child: Text('Aucun ticket trouvé.')),
@@ -354,7 +378,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          final ticket = tickets[index];
+                          final ticket = sortedTickets[index];
                           final dateFormat = DateFormat('dd/MM/yyyy');
                           final displayQuoi = (ticket.quoi != null && ticket.quoi!.isNotEmpty) ? ticket.quoi : '—';
 
@@ -447,7 +471,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                             ),
                           );
                         },
-                        childCount: tickets.length,
+                        childCount: sortedTickets.length,
                       ),
                     ),
                   ),
