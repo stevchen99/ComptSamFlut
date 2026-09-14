@@ -35,6 +35,7 @@ class TicketListScreen extends StatefulWidget {
 class _TicketListScreenState extends State<TicketListScreen> {
   late Future<List<Ticket>> _ticketsFuture;
   List<Ticket> _currentTickets = [];
+  final Set<String> _selectedTicketIds = {};
 
   @override
   void initState() {
@@ -44,20 +45,20 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
   void _refreshTickets() {
     setState(() {
+      _selectedTicketIds.clear();
       _ticketsFuture = ApiService.fetchTickets();
     });
   }
 
   void _showTicketDialog({Ticket? ticket}) {
-    // Explicitly check if ticket has a valid ID to determine edit mode
     final bool isEditing = ticket != null && ticket.id != null && ticket.id!.isNotEmpty;
-    
+
     const fixedQuiOptions = ['Stev', 'Bee', 'Lana'];
     String selectedQui = fixedQuiOptions.contains(ticket?.qui) ? ticket!.qui : fixedQuiOptions.first;
-    
+
     const combienOptions = [7, 10];
-    int selectedCombien = (ticket != null && combienOptions.contains(ticket.combien)) 
-        ? ticket.combien 
+    int selectedCombien = (ticket != null && combienOptions.contains(ticket.combien))
+        ? ticket.combien
         : 7;
 
     final quoiController = TextEditingController(text: ticket?.quoi ?? '');
@@ -91,14 +92,11 @@ class _TicketListScreenState extends State<TicketListScreen> {
                         }
                       },
                     ),
-
-                    // STRICT CHECK: "Quoi" input renders ONLY when editing an existing ticket ID
                     if (isEditing)
                       TextField(
                         controller: quoiController,
                         decoration: const InputDecoration(labelText: 'Quoi'),
                       ),
-
                     DropdownButtonFormField<int>(
                       value: selectedCombien,
                       decoration: const InputDecoration(labelText: 'Combien'),
@@ -220,99 +218,89 @@ class _TicketListScreenState extends State<TicketListScreen> {
     }
   }
 
-  void _markOutput(Ticket ticket) {
-    final quoiController = TextEditingController(text: ticket.quoi);
-    const combienOptions = [7, 10];
-    int selectedCombien = combienOptions.contains(ticket.combien) ? ticket.combien : 7;
+  // Checkout Dialog - Only asks for "Quoi", displaying how many items were checked
+  void _showCheckoutDialog(List<Ticket> selectedTickets) {
+    final quoiController = TextEditingController();
+    final int howManyChecked = selectedTickets.length;
 
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Sortie Ticket'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: quoiController,
-                    decoration: const InputDecoration(labelText: 'Quoi (Objet)'),
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: selectedCombien,
-                    decoration: const InputDecoration(labelText: 'Combien'),
-                    items: combienOptions
-                        .map((value) => DropdownMenuItem<int>(
-                              value: value,
-                              child: Text('$value'),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setDialogState(() => selectedCombien = value);
-                      }
-                    },
-                  ),
-                ],
+        return AlertDialog(
+          title: Text('Checkout ($howManyChecked ticket${howManyChecked > 1 ? 's' : ''})'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'How many: $howManyChecked',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Annuler'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: quoiController,
+                decoration: const InputDecoration(
+                  labelText: 'Quoi',
+                  hintText: 'Saisissez le motif de sortie',
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final finalQuoi = quoiController.text.trim();
+                autofocus: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final finalQuoi = quoiController.text.trim();
 
-                    if (finalQuoi.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Le champ "Quoi" est obligatoire.')),
-                      );
-                      return;
-                    }
+                if (finalQuoi.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Le champ "Quoi" est obligatoire.')),
+                  );
+                  return;
+                }
 
-                    try {
-                      await ApiService.checkAndUpdateTicket(
-                        ticketId: ticket.id!,
-                        quoi: finalQuoi,
-                        combien: selectedCombien,
-                      );
-                      if (context.mounted) Navigator.pop(context);
-                      _refreshTickets();
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erreur d\'actualisation: $e')),
-                      );
-                    }
-                  },
-                  child: const Text('Valider'),
-                ),
-              ],
-            );
-          },
+                try {
+                  await ApiService.batchCheckout(
+                    tickets: selectedTickets,
+                    quoi: finalQuoi,
+                  );
+                  if (context.mounted) Navigator.pop(context);
+                  _refreshTickets();
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erreur lors du checkout: $e')),
+                  );
+                }
+              },
+              child: const Text('Valider Checkout'),
+            ),
+          ],
         );
       },
     );
   }
 
-  void _handleCheckout(List<Ticket> tickets) {
-    final activeTicket = tickets.isNotEmpty
-        ? tickets.firstWhere(
-            (ticket) => ticket.dateOutput == null && !ticket.lanaGarde,
-            orElse: () => tickets.first,
-          )
-        : null;
-
-    if (activeTicket != null) {
-      _markOutput(activeTicket);
-    } else {
+  void _handleCheckout() {
+    // Check that at least 1 checkbox is selected
+    if (_selectedTicketIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aucun ticket disponible pour checkout')),
+        const SnackBar(
+          content: Text('Veuillez cocher au moins 1 ticket pour effectuer le checkout.'),
+          backgroundColor: Colors.orange,
+        ),
       );
+      return;
     }
+
+    final selectedTickets = _currentTickets
+        .where((ticket) => ticket.id != null && _selectedTicketIds.contains(ticket.id))
+        .toList();
+
+    _showCheckoutDialog(selectedTickets);
   }
 
   @override
@@ -369,23 +357,45 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           final ticket = tickets[index];
                           final dateFormat = DateFormat('dd/MM/yyyy');
                           final displayQuoi = (ticket.quoi != null && ticket.quoi!.isNotEmpty) ? ticket.quoi : '—';
+                          final bool isAvailableForCheckout = ticket.dateOutput == null && !ticket.lanaGarde;
+                          final bool isChecked = ticket.id != null && _selectedTicketIds.contains(ticket.id);
 
                           return Card(
                             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
+                                  // Combien circle avatar
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundColor: ticket.dateOutput != null ? Colors.red : (ticket.lanaGarde ? Colors.orange : Colors.green),
+                                    backgroundColor: ticket.dateOutput != null
+                                        ? Colors.red
+                                        : (ticket.lanaGarde ? Colors.orange : Colors.green),
                                     child: Text(
                                       '${ticket.combien}',
                                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
+
+                                  // Checkbox positioned directly after combien badge
+                                  Checkbox(
+                                    value: isChecked,
+                                    onChanged: isAvailableForCheckout
+                                        ? (bool? value) {
+                                            setState(() {
+                                              if (value == true && ticket.id != null) {
+                                                _selectedTicketIds.add(ticket.id!);
+                                              } else {
+                                                _selectedTicketIds.remove(ticket.id);
+                                              }
+                                            });
+                                          }
+                                        : null,
+                                  ),
+
+                                  const SizedBox(width: 6),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,7 +408,8 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                         const SizedBox(height: 2),
                                         Text('In: ${dateFormat.format(ticket.dateInput)}', style: const TextStyle(fontSize: 12)),
                                         if (ticket.dateOutput != null)
-                                          Text('Out: ${dateFormat.format(ticket.dateOutput!)}', style: const TextStyle(color: Colors.green, fontSize: 12))
+                                          Text('Out: ${dateFormat.format(ticket.dateOutput!)}',
+                                              style: const TextStyle(color: Colors.green, fontSize: 12))
                                         else
                                           const Text('Out: En cours...', style: TextStyle(color: Colors.grey, fontSize: 12)),
                                       ],
@@ -455,7 +466,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
               left: 0,
               bottom: 0,
               child: ElevatedButton(
-                onPressed: () => _handleCheckout(_currentTickets),
+                onPressed: _handleCheckout,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
@@ -464,7 +475,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text('Checkout'),
+                child: Text('Checkout (${_selectedTicketIds.length})'),
               ),
             ),
             Positioned(

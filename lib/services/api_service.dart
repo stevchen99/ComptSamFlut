@@ -46,7 +46,7 @@ class ApiService {
     }
   }
 
-  // POST: Validate stock availability before checkout/update
+  // POST: Validate stock availability before checkout/update for a single ticket
   static Future<void> checkAndUpdateTicket({
     required String ticketId,
     required String quoi,
@@ -78,6 +78,22 @@ class ApiService {
     }
 
     throw Exception(message);
+  }
+
+  // POST: Batch Checkout for multiple selected tickets
+  static Future<void> batchCheckout({
+    required List<Ticket> tickets,
+    required String quoi,
+  }) async {
+    for (final ticket in tickets) {
+      if (ticket.id != null) {
+        await checkAndUpdateTicket(
+          ticketId: ticket.id!,
+          quoi: quoi,
+          combien: ticket.combien,
+        );
+      }
+    }
   }
 
   // DELETE: Delete ticket
