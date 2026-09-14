@@ -88,7 +88,12 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           .toList(),
                       onChanged: (value) {
                         if (value != null) {
-                          setDialogState(() => selectedQui = value);
+                          setDialogState(() {
+                            selectedQui = value;
+                            if (selectedQui != 'Lana') {
+                              lanaGarde = false;
+                            }
+                          });
                         }
                       },
                     ),
@@ -112,11 +117,12 @@ class _TicketListScreenState extends State<TicketListScreen> {
                         }
                       },
                     ),
-                    SwitchListTile(
-                      title: const Text('Lana Garde'),
-                      value: lanaGarde,
-                      onChanged: (val) => setDialogState(() => lanaGarde = val),
-                    ),
+                    if (selectedQui == 'Lana')
+                      SwitchListTile(
+                        title: const Text('Lana Garde'),
+                        value: lanaGarde,
+                        onChanged: (val) => setDialogState(() => lanaGarde = val),
+                      ),
                     ListTile(
                       title: Text('Date Entrée: ${DateFormat('dd/MM/yyyy').format(dateInput)}'),
                       trailing: const Icon(Icons.calendar_today),
@@ -158,7 +164,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       qui: selectedQui,
                       quoi: finalQuoi ?? '',
                       combien: selectedCombien,
-                      lanaGarde: lanaGarde,
+                      lanaGarde: selectedQui == 'Lana' ? lanaGarde : false,
                     );
 
                     try {
@@ -218,7 +224,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
     }
   }
 
-  // Checkout Dialog - only passes quoi and the exact list of checked ticket IDs
   void _showCheckoutDialog(List<String> checkedTicketIds) {
     final quoiController = TextEditingController();
     final int count = checkedTicketIds.length;
@@ -374,8 +379,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                     ),
                                   ),
-
-                                  // Hide checkbox completely when ticket is used or on Lana Garde
                                   if (isAvailableForCheckout)
                                     Checkbox(
                                       value: isChecked,
@@ -391,7 +394,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                     )
                                   else
                                     const SizedBox(width: 12),
-
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Column(
