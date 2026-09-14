@@ -80,7 +80,7 @@ class ApiService {
     throw Exception(message);
   }
 
-  // POST: Batch Checkout for multiple selected tickets
+  // POST: Batch Checkout ONLY for the selected tickets passed in
   static Future<void> batchCheckout({
     required List<Ticket> tickets,
     required String quoi,

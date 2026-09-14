@@ -218,7 +218,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
     }
   }
 
-  // Checkout Dialog - Only asks for "Quoi", displaying how many items were checked
+  // Checkout Dialog - Processes strictly ONLY checked tickets
   void _showCheckoutDialog(List<Ticket> selectedTickets) {
     final quoiController = TextEditingController();
     final int howManyChecked = selectedTickets.length;
@@ -296,6 +296,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
       return;
     }
 
+    // Strictly filter to process ONLY checked tickets matching selected IDs
     final selectedTickets = _currentTickets
         .where((ticket) => ticket.id != null && _selectedTicketIds.contains(ticket.id))
         .toList();
@@ -357,7 +358,10 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           final ticket = tickets[index];
                           final dateFormat = DateFormat('dd/MM/yyyy');
                           final displayQuoi = (ticket.quoi != null && ticket.quoi!.isNotEmpty) ? ticket.quoi : '—';
-                          final bool isAvailableForCheckout = ticket.dateOutput == null && !ticket.lanaGarde;
+                          
+                          // Check conditions
+                          final bool isUsed = ticket.dateOutput != null;
+                          final bool isAvailableForCheckout = !isUsed && !ticket.lanaGarde;
                           final bool isChecked = ticket.id != null && _selectedTicketIds.contains(ticket.id);
 
                           return Card(
@@ -370,7 +374,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                   // Combien circle avatar
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundColor: ticket.dateOutput != null
+                                    backgroundColor: isUsed
                                         ? Colors.red
                                         : (ticket.lanaGarde ? Colors.orange : Colors.green),
                                     child: Text(
@@ -379,21 +383,22 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                     ),
                                   ),
 
-                                  // Checkbox positioned directly after combien badge
-                                  Checkbox(
-                                    value: isChecked,
-                                    onChanged: isAvailableForCheckout
-                                        ? (bool? value) {
-                                            setState(() {
-                                              if (value == true && ticket.id != null) {
-                                                _selectedTicketIds.add(ticket.id!);
-                                              } else {
-                                                _selectedTicketIds.remove(ticket.id);
-                                              }
-                                            });
+                                  // 1. Hide checkbox completely if ticket is used or on Lana Garde
+                                  if (isAvailableForCheckout)
+                                    Checkbox(
+                                      value: isChecked,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          if (value == true && ticket.id != null) {
+                                            _selectedTicketIds.add(ticket.id!);
+                                          } else {
+                                            _selectedTicketIds.remove(ticket.id);
                                           }
-                                        : null,
-                                  ),
+                                        });
+                                      },
+                                    )
+                                  else
+                                    const SizedBox(width: 12), // Spacer when checkbox is hidden
 
                                   const SizedBox(width: 6),
                                   Expanded(
