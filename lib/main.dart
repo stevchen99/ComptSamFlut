@@ -566,9 +566,9 @@ class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
         spacing: 12,
         runSpacing: 4,
         children: [
-          _StatusPill(label: 'Avail', count: availableCount, sum: availableSum, color: Colors.green),
-          _StatusPill(label: 'Lana', count: lanaCount, sum: lanaSum, color: Colors.orange),
-          _StatusPill(label: 'Used', count: usedCount, sum: usedSum, color: Colors.red),
+          _StatusPill(count: availableCount, sum: availableSum, color: Colors.green),
+          _StatusPill(count: lanaCount, sum: lanaSum, color: Colors.orange),
+          _StatusPill(count: usedCount, sum: usedSum, color: Colors.red),
         ],
       ),
     );
@@ -591,13 +591,11 @@ class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _StatusPill extends StatelessWidget {
-  final String label;
   final int count;
   final int sum;
   final Color color;
 
   const _StatusPill({
-    required this.label,
     required this.count,
     required this.sum,
     required this.color,
@@ -625,7 +623,7 @@ class _StatusPill extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            '$label $count : $sum€',
+            '$count : $sum€',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
