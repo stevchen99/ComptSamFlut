@@ -342,16 +342,25 @@ class _TicketListScreenState extends State<TicketListScreen> {
           final usedCount = rawTickets.where((t) => t.dateOutput != null).length;
 
           // Order list: Available (0) -> Lana (1) -> Used (2)
-          // Secondary sort: Date Input descending (newest first)
-          final sortedTickets = List<Ticket>.from(rawTickets)
-            ..sort((a, b) {
-              int priorityA = _getTicketPriority(a);
-              int priorityB = _getTicketPriority(b);
-              if (priorityA != priorityB) {
-                return priorityA.compareTo(priorityB);
-              }
-              return b.dateInput.compareTo(a.dateInput);
-            });
+          // Secondary sort: Combien ascending (7 before 10)
+          // Third sort: Date Input descending (newest first)
+         final sortedTickets = List<Ticket>.from(rawTickets)
+  ..sort((a, b) {
+    // 1. Sort by Priority (Available -> Lana -> Used)
+    int priorityA = _getTicketPriority(a);
+    int priorityB = _getTicketPriority(b);
+    if (priorityA != priorityB) {
+      return priorityA.compareTo(priorityB);
+    }
+
+    // 2. Sort by Combien (Ascending: 7 before 10)
+    if (a.combien != b.combien) {
+      return a.combien.compareTo(b.combien);
+    }
+
+    // 3. Sort by Date Input (Ascending: Oldest first)
+    return a.dateInput.compareTo(b.dateInput);
+  });
 
           _currentTickets = sortedTickets;
 
