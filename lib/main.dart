@@ -336,31 +336,36 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
           final rawTickets = snapshot.data ?? <Ticket>[];
 
-          // Compute Counts
-          final availableCount = rawTickets.where((t) => t.dateOutput == null && !t.lanaGarde).length;
-          final lanaCount = rawTickets.where((t) => t.lanaGarde).length;
-          final usedCount = rawTickets.where((t) => t.dateOutput != null).length;
+          // Compute Counts and Sums
+          final availableTickets = rawTickets.where((t) => t.dateOutput == null && !t.lanaGarde);
+          final lanaTickets = rawTickets.where((t) => t.lanaGarde);
+          final usedTickets = rawTickets.where((t) => t.dateOutput != null);
 
-          // Order list: Available (0) -> Lana (1) -> Used (2)
-          // Secondary sort: Combien ascending (7 before 10)
-          // Third sort: Date Input descending (newest first)
-         final sortedTickets = List<Ticket>.from(rawTickets)
-  ..sort((a, b) {
-    // 1. Sort by Priority (Available -> Lana -> Used)
-    int priorityA = _getTicketPriority(a);
-    int priorityB = _getTicketPriority(b);
-    if (priorityA != priorityB) {
-      return priorityA.compareTo(priorityB);
-    }
+          final availableCount = availableTickets.length;
+          final availableSum = availableTickets.fold<int>(0, (sum, t) => sum + t.combien);
 
-    // 2. Sort by Combien (Ascending: 7 before 10)
-    if (a.combien != b.combien) {
-      return a.combien.compareTo(b.combien);
-    }
+          final lanaCount = lanaTickets.length;
+          final lanaSum = lanaTickets.fold<int>(0, (sum, t) => sum + t.combien);
 
-    // 3. Sort by Date Input (Ascending: Oldest first)
-    return a.dateInput.compareTo(b.dateInput);
-  });
+          final usedCount = usedTickets.length;
+          final usedSum = usedTickets.fold<int>(0, (sum, t) => sum + t.combien);
+
+          // Order list:
+          // 1. Priority: Available (0) -> Lana (1) -> Used (2)
+          // 2. Combien: Ascending (7 before 10)
+          // 3. Date Input: Ascending (Oldest first)
+          final sortedTickets = List<Ticket>.from(rawTickets)
+            ..sort((a, b) {
+              int priorityA = _getTicketPriority(a);
+              int priorityB = _getTicketPriority(b);
+              if (priorityA != priorityB) {
+                return priorityA.compareTo(priorityB);
+              }
+              if (a.combien != b.combien) {
+                return a.combien.compareTo(b.combien);
+              }
+              return a.dateInput.compareTo(b.dateInput);
+            });
 
           _currentTickets = sortedTickets;
 
@@ -372,8 +377,11 @@ class _TicketListScreenState extends State<TicketListScreen> {
                   pinned: true,
                   delegate: _GreyDashboardHeaderDelegate(
                     availableCount: availableCount,
+                    availableSum: availableSum,
                     lanaCount: lanaCount,
+                    lanaSum: lanaSum,
                     usedCount: usedCount,
+                    usedSum: usedSum,
                   ),
                 ),
                 if (sortedTickets.isEmpty)
@@ -530,13 +538,19 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
 class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
   final int availableCount;
+  final int availableSum;
   final int lanaCount;
+  final int lanaSum;
   final int usedCount;
+  final int usedSum;
 
   const _GreyDashboardHeaderDelegate({
     required this.availableCount,
+    required this.availableSum,
     required this.lanaCount,
+    required this.lanaSum,
     required this.usedCount,
+    required this.usedSum,
   });
 
   @override
@@ -552,9 +566,9 @@ class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
         spacing: 12,
         runSpacing: 4,
         children: [
-          _StatusPill(label: 'Available', count: availableCount, color: Colors.green),
-          _StatusPill(label: 'Lana', count: lanaCount, color: Colors.orange),
-          _StatusPill(label: 'Used', count: usedCount, color: Colors.red),
+          _StatusPill(label: 'Avail', count: availableCount, sum: availableSum, color: Colors.green),
+          _StatusPill(label: 'Lana', count: lanaCount, sum: lanaSum, color: Colors.orange),
+          _StatusPill(label: 'Used', count: usedCount, sum: usedSum, color: Colors.red),
         ],
       ),
     );
@@ -569,18 +583,23 @@ class _GreyDashboardHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _GreyDashboardHeaderDelegate oldDelegate) =>
       availableCount != oldDelegate.availableCount ||
+      availableSum != oldDelegate.availableSum ||
       lanaCount != oldDelegate.lanaCount ||
-      usedCount != oldDelegate.usedCount;
+      lanaSum != oldDelegate.lanaSum ||
+      usedCount != oldDelegate.usedCount ||
+      usedSum != oldDelegate.usedSum;
 }
 
 class _StatusPill extends StatelessWidget {
   final String label;
   final int count;
+  final int sum;
   final Color color;
 
   const _StatusPill({
     required this.label,
     required this.count,
+    required this.sum,
     required this.color,
   });
 
@@ -606,7 +625,7 @@ class _StatusPill extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            '$label $count',
+            '$label $count : $sum€',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
