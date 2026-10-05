@@ -369,7 +369,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
           // Compute Counts and Sums
           final availableTickets = rawTickets.where((t) => t.dateOutput == null && !t.lanaGarde);
-          final lanaTickets = rawTickets.where((t) => t.lanaGarde);
+          final lanaTickets = rawTickets.where((t) => t.lanaGarde && t.dateOutput == null);
           final usedTickets = rawTickets.where((t) => t.dateOutput != null);
 
           final availableCount = availableTickets.length;
