@@ -148,6 +148,37 @@ class _TicketListScreenState extends State<TicketListScreen> {
                         }
                       },
                     ),
+                    if (isEditing)
+                      ListTile(
+                        title: Text(
+                          dateOutput == null
+                              ? 'Date Sortie: En cours...'
+                              : 'Date Sortie: ${DateFormat('dd/MM/yyyy').format(dateOutput!)}',
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (dateOutput != null)
+                              IconButton(
+                                icon: const Icon(Icons.clear),
+                                tooltip: 'Effacer la date de sortie',
+                                onPressed: () => setDialogState(() => dateOutput = null),
+                              ),
+                            const Icon(Icons.calendar_today),
+                          ],
+                        ),
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: dateOutput ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                          );
+                          if (picked != null) {
+                            setDialogState(() => dateOutput = picked);
+                          }
+                        },
+                      ),
                   ],
                 ),
               ),
