@@ -480,7 +480,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                                         Text('In: ${dateFormat.format(ticket.dateInput)}', style: const TextStyle(fontSize: 12)),
                                         if (ticket.dateOutput != null)
                                           Text('Out: ${dateFormat.format(ticket.dateOutput!)}',
-                                              style: const TextStyle(color: Colors.green, fontSize: 12))
+                                              style: const TextStyle(color: Colors.red, fontSize: 12))
                                         else
                                           const Text('Out: En cours...', style: TextStyle(color: Colors.grey, fontSize: 12)),
                                       ],
